@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Level Bar Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      transition: background-color 0.3s;
+    }
+
+    #statusText {
+      font-size: 1.5em;
+      margin-bottom: 30px;
+    }
+
+    .bar-container {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin-bottom: 30px;
+    }
+
+    .bar-section {
+      width: 30px;
+      height: 100px;
+      background-color: #ddd;
+      border: 1px solid #aaa;
+      transition: background-color 0.3s;
+    }
+
+    .filled {
+      background-color: #4caf50;
+    }
+
+    #tryButton {
+      padding: 10px 20px;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="statusText">The next click has a 50% chance of success</div>
+
+  <div class="bar-container" id="levelBar">
+    <!-- 9 sections -->
+    <div class="bar-section"></div>
+    <div class="bar-section"></div>
+    <div class="bar-section"></div>
+    <div class="bar-section"></div>
+    <div class="bar-section"></div>
+    <div class="bar-section"></div>
+    <div class="bar-section"></div>
+    <div class="bar-section"></div>
+    <div class="bar-section"></div>
+  </div>
+
+  <button id="tryButton">Try</button>
+
+  <!-- Audio element -->
+  <audio id="winSound" src="trompeta.mp3" preload="auto"></audio>
+
+  <script>
+    let currentLevel = 0;
+    const maxLevel = 9;
+    const barSections = document.querySelectorAll('.bar-section');
+    const tryButton = document.getElementById('tryButton');
+    const statusText = document.getElementById('statusText');
+    const body = document.body;
+    const winSound = document.getElementById('winSound');
+
+    function updateBar() {
+      barSections.forEach((section, index) => {
+        section.classList.toggle('filled', index < currentLevel);
+      });
+    }
+
+    tryButton.addEventListener('click', () => {
+      const success = Math.random() < 0.9;
+
+      if (success) {
+        if (currentLevel < maxLevel) {
+          currentLevel++;
+        }
+      } else {
+        currentLevel = 0;
+      }
+
+      updateBar();
+
+      if (currentLevel === maxLevel) {
+        statusText.textContent = "You've reached the max level!";
+        body.style.backgroundColor = 'red';
+
+        // Reproducir sonido
+        winSound.currentTime = 0;
+        winSound.play();
+
+        setTimeout(() => {
+          body.style.backgroundColor = 'white';
+        }, 2000);
+      } else {
+        statusText.textContent = "The next click has a 50% chance of success";
+      }
+    });
+
+    updateBar();
+  </script>
+
+</body>
+</html>
