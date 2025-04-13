@@ -44,7 +44,7 @@
 </head>
 <body>
 
-  <div id="statusText">The next click has a 90% chance of success</div>
+  <div id="statusText">The next click has a 90% chance of success.</div>
 
   <div class="bar-container" id="levelBar">
     <!-- 9 sections -->
@@ -63,8 +63,14 @@
 
   <!-- Audio element -->
   <audio id="winSound" src="trompeta.mp3" preload="auto"></audio>
+  <audio id="fail1" src="offMinecraft.mp3" preload="auto"></audio>
+  <audio id="fail2" src="oofRoblox.mp3" preload="auto"></audio>
+  <audio id="fail3" src="peo.mp3" preload="auto"></audio>
+  <audio id="fail4" src="boomVine.mp3" preload="auto"></audio>
 
   <script>
+
+    
     let currentLevel = 0;
     const maxLevel = 9;
     const barSections = document.querySelectorAll('.bar-section');
@@ -79,34 +85,47 @@
       });
     }
   
-    tryButton.addEventListener('click', () => {
-      let chance = (maxLevel - currentLevel) * 0.1; // De 0.9 a 0.1
-      const success = Math.random() < chance;
-  
-      if (success) {
-        if (currentLevel < maxLevel) {
-          currentLevel++;
-        }
-      } else {
-        currentLevel = 0;
+    const failSounds = [
+  document.getElementById('fail1'),
+  document.getElementById('fail2'),
+  document.getElementById('fail3'),
+  document.getElementById('fail4')
+];
+
+  tryButton.addEventListener('click', () => {
+    let chance = (maxLevel - currentLevel) * 0.1; // De 0.9 a 0.1
+    const success = Math.random() < chance;
+
+    if (success) {
+      if (currentLevel < maxLevel) {
+        currentLevel++;
       }
-  
-      updateBar();
-  
-      if (currentLevel === maxLevel) {
-        statusText.textContent = "You've reached the max level!";
-        body.style.backgroundColor = 'green';
-        winSound.currentTime = 0;
-        winSound.play();
-  
-        setTimeout(() => {
-          body.style.backgroundColor = 'white';
-        }, 2000);
-      } else {
-        let nextChance = (maxLevel - currentLevel) * 10; // Mostrar en %
-        statusText.textContent = `The next click has a ${nextChance}% chance of success`;
-      }
-    });
+    } else {
+      currentLevel = 0;
+
+      // Reproducir un sonido aleatorio de fallo
+      const randomSound = failSounds[Math.floor(Math.random() * failSounds.length)];
+      randomSound.currentTime = 0;
+      randomSound.play();
+    }
+
+    updateBar();
+
+    if (currentLevel === maxLevel) {
+      statusText.textContent = "You did it!";
+      body.style.backgroundColor = 'green';
+      winSound.currentTime = 0;
+      winSound.play();
+
+      setTimeout(() => {
+        body.style.backgroundColor = 'white';
+      }, 2000);
+    } else {
+      let nextChance = (maxLevel - currentLevel) * 10; // Mostrar en %
+      statusText.textContent = `The next click has a ${nextChance}% chance of success.`;
+    }
+  });
+
   
     updateBar();
   </script>  
