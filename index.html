@@ -47,6 +47,18 @@
     }
   </style>
 </head>
+
+<!-- Ventana emergente para ingresar el nombre -->
+<div id="nameModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.7); z-index:1000;">
+  <div style="background:white; padding:20px; border-radius:8px; width:300px; margin:100px auto; text-align:center;">
+    <h2>¡Lo lograste!</h2>
+    <p>Ingresa tu nombre:</p>
+    <input type="text" id="playerName" placeholder="Tu nombre" style="width: 90%; padding: 5px;" />
+    <br><br>
+    <button onclick="submitName()">Guardar</button>
+  </div>
+</div>
+
 <body>
 
   <div id="statusText">The next click has a 90% chance of success.</div>
@@ -122,6 +134,7 @@
 
       // Variable para almacenar la última fecha de victoria
       let lastWinDate = null;
+      let lastWinnerName = "Unknown"; // <--- NUEVA VARIABLE
       let updateInterval = null; // Para almacenar el intervalo de actualización
 
       // Función para actualizar la barra de niveles
@@ -130,6 +143,22 @@
           section.classList.toggle('filled', index < currentLevel);
         });
       }
+
+      function showNameModal() {
+        document.getElementById('nameModal').style.display = 'block';
+      }
+
+      function submitName() {
+        const nameInput = document.getElementById('playerName');
+        const playerName = nameInput.value.trim();
+        if (playerName) {
+          document.getElementById('nameModal').style.display = 'none';
+          updateLastWin(playerName);
+        } else {
+          alert("Por favor ingresa un nombre.");
+        }
+      }
+
 
       // Función para convertir la fecha a formato relativo y determinar el intervalo
       function getRelativeTime(date) {
@@ -183,10 +212,11 @@
       }
 
       // Función para actualizar el texto y el intervalo de actualización
-      function updateLastWinText() {
+      function updateLastWinText(name = "Unknown") {
         if (lastWinDate) {
           const { text, interval } = getRelativeTime(lastWinDate);
-          lastWinText.textContent = `Last time beaten: ${text}`;
+          lastWinText.textContent = `Last time beaten: ${text} by ${lastWinnerName}`;
+
 
           // Si el intervalo ha cambiado, actualizamos el setInterval
           if (!updateInterval || updateInterval.interval !== interval) {
@@ -210,8 +240,10 @@
             console.log("Documento obtenido:", doc.exists, doc.data());
             if (doc.exists && doc.data().timestamp) {
               lastWinDate = doc.data().timestamp.toDate();
-              updateLastWinText(); // Actualizar el texto inmediatamente y comenzar el ciclo
-            } else {
+              lastWinnerName = doc.data().name || "Unknown"; // <--- GUARDAMOS EL NOMBRE
+              updateLastWinText();
+            }
+            else {
               lastWinText.textContent = `Last time beaten: Never`;
               if (updateInterval) {
                 clearInterval(updateInterval.id); // Detener cualquier intervalo si no hay fecha
@@ -230,13 +262,14 @@
       }
 
       // Función para actualizar la fecha de victoria
-      function updateLastWin() {
-        console.log("Actualizando el timestamp en Firestore...");
+      function updateLastWin(name) {
+        const timestamp = firebase.firestore.Timestamp.fromDate(new Date());
         db.collection('levelCompletion').doc('lastCompletion').set({
-          timestamp: firebase.firestore.Timestamp.fromDate(new Date())
+          timestamp: timestamp,
+          name: name
         })
         .then(() => {
-          loadLastWin(); // Recargar la fecha desde Firestore
+          loadLastWin(); // Recargar y mostrar
         })
         .catch((error) => {
           console.error("Error al actualizar la última victoria:", error);
@@ -279,8 +312,8 @@
           winSound.currentTime = 0;
           winSound.play();
 
-          // Actualizar la fecha de victoria en Firestore
-          updateLastWin();
+          showNameModal(); // Mostrar ventana para ingresar el nombre
+
 
           setTimeout(() => {
             body.style.backgroundColor = 'white';
