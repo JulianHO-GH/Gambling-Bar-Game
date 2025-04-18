@@ -45,14 +45,20 @@
       margin-top: 20px;
       font-size: 1em;
     }
+
+    .bar-section.failed {
+      background-color: red !important;
+      transition: background-color 0.05s;
+    }
+
   </style>
 </head>
 
 <!-- Ventana emergente para ingresar el nombre -->
 <div id="nameModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.7); z-index:1000;">
   <div style="background:white; padding:20px; border-radius:8px; width:300px; margin:100px auto; text-align:center;">
-    <h2>¡Lo lograste!</h2>
-    <p>Ingresa tu nombre:</p>
+    <h2>You are lucky today!</h2>
+    <p>Grass hater name:</p>
     <input type="text" id="playerName" placeholder="Tu nombre" style="width: 90%; padding: 5px;" />
     <br><br>
     <button onclick="submitName()">Guardar</button>
@@ -281,7 +287,7 @@
 
       // Lógica del botón Try
       tryButton.addEventListener('click', () => {
-        let chance = (maxLevel - currentLevel) * 0.1; // De 0.9 a 0.1
+        let chance = (maxLevel - currentLevel) * 0.1;  // De 0.9 a 0.1
         const randomValue = Math.random();
         const success = randomValue < chance;
 
@@ -297,12 +303,30 @@
             console.log(`Avanzaste al nivel: ${currentLevel}`);
           }
         } else {
-          currentLevel = 0;
-          console.log(`Fallaste. Nivel reiniciado a: ${currentLevel}`);
-          const randomSound = failSounds[Math.floor(Math.random() * failSounds.length)];
-          randomSound.currentTime = 0;
-          randomSound.play();
-        }
+            // Marcar barras completadas como fallidas (rojas)
+            barSections.forEach((section, index) => {
+              if (index < currentLevel) {
+                section.classList.add('failed');
+              }
+            });
+
+            // Revertir a "vacías" luego de 50ms
+            setTimeout(() => {
+              barSections.forEach((section, index) => {
+                section.classList.remove('failed');
+                section.classList.remove('filled');
+              });
+              currentLevel = 0;
+              updateBar(); // Por si acaso
+              statusText.textContent = `The next click has a 90% chance of success.`;
+            }, 50);
+
+            console.log(`Fallaste. Nivel reiniciado a: 0`);
+            const randomSound = failSounds[Math.floor(Math.random() * failSounds.length)];
+            randomSound.currentTime = 0;
+            randomSound.play();
+          }
+
 
         updateBar();
 
@@ -313,6 +337,8 @@
           winSound.play();
 
           showNameModal(); // Mostrar ventana para ingresar el nombre
+          tryButton.disabled = true;
+
 
 
           setTimeout(() => {
