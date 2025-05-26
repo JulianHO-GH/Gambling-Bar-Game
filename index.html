@@ -50,22 +50,20 @@
       background-color: red !important;
       transition: background-color 0.05s;
     }
-
   </style>
 </head>
 
-<!-- Ventana emergente para ingresar el nombre -->
-<div id="nameModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.7); z-index:1000;">
-  <div style="background:white; padding:20px; border-radius:8px; width:300px; margin:100px auto; text-align:center;">
-    <h2>You are lucky today!</h2>
-    <p>Grass hater name:</p>
-    <input type="text" id="playerName" placeholder="Tu nombre" style="width: 90%; padding: 5px;" />
-    <br><br>
-    <button onclick="submitName()">Guardar</button>
-  </div>
-</div>
-
 <body>
+  <!-- Ventana emergente para ingresar el nombre -->
+  <div id="nameModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.7); z-index:1000;">
+    <div style="background:white; padding:20px; border-radius:8px; width:300px; margin:100px auto; text-align:center;">
+      <h2>You are lucky today!</h2>
+      <p>Grass hater name:</p>
+      <input type="text" id="playerName" placeholder="Tu nombre" style="width: 90%; padding: 5px;" />
+      <br><br>
+      <button onclick="submitName()">Guardar</button>
+    </div>
+  </div>
 
   <div id="statusText">The next click has a 90% chance of success.</div>
 
@@ -94,6 +92,7 @@
   <!-- Firebase SDK (versión 11.6.0, compatibilidad global) -->
   <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-functions-compat.js"></script>
 
   <!-- Cargar firebaseConfig desde config.js -->
   <script src="config.js"></script>
@@ -102,6 +101,7 @@
     // Verificar si firebase está definido
     if (typeof firebase === 'undefined') {
       console.error("Firebase no está definido. Verifica que los scripts se carguen correctamente.");
+      document.getElementById('lastWin').textContent = `Last time beaten: Error (Firebase missing)`;
     } else {
       console.log("Firebase cargado correctamente:", firebase);
     }
@@ -109,7 +109,7 @@
     // Verificar si firebaseConfig está definido
     if (typeof firebaseConfig === 'undefined') {
       console.error("firebaseConfig no está definido. Asegúrate de que config.js se cargue correctamente.");
-      lastWinText.textContent = `Last time beaten: Error (Config missing)`;
+      document.getElementById('lastWin').textContent = `Last time beaten: Error (Config missing)`;
     } else {
       // Inicializar Firebase
       try {
@@ -117,10 +117,11 @@
         console.log("Firebase inicializado correctamente.");
       } catch (error) {
         console.error("Error al inicializar Firebase:", error);
-        lastWinText.textContent = `Last time beaten: Error (Firebase init failed)`;
+        document.getElementById('lastWin').textContent = `Last time beaten: Error (Firebase init failed)`;
       }
 
       const db = firebase.firestore();
+      const functions = firebase.functions();
 
       let currentLevel = 0;
       const maxLevel = 9;
@@ -140,8 +141,8 @@
 
       // Variable para almacenar la última fecha de victoria
       let lastWinDate = null;
-      let lastWinnerName = "Unknown"; // <--- NUEVA VARIABLE
-      let updateInterval = null; // Para almacenar el intervalo de actualización
+      let lastWinnerName = "Unknown";
+      let updateInterval = null;
 
       // Función para actualizar la barra de niveles
       function updateBar() {
@@ -154,27 +155,36 @@
         document.getElementById('nameModal').style.display = 'block';
       }
 
-      function submitName() {
+      async function submitName() {
         const nameInput = document.getElementById('playerName');
         const playerName = nameInput.value.trim();
         if (playerName) {
-          document.getElementById('nameModal').style.display = 'none';
-          updateLastWin(playerName);
+          try {
+            await functions.httpsCallable("updateLastWin")({ playerName });
+            document.getElementById('nameModal').style.display = 'none';
+            loadLastWin(); // Recargar la última victoria
+            tryButton.disabled = false; // Habilitar el botón para un nuevo juego
+            currentLevel = 0; // Reiniciar el nivel
+            updateBar();
+            statusText.textContent = `The next click has a 90% chance of success.`;
+          } catch (error) {
+            console.error("Error al guardar el nombre:", error);
+            alert("Error al guardar el nombre. Intenta de nuevo.");
+          }
         } else {
           alert("Por favor ingresa un nombre.");
         }
       }
 
-
       // Función para convertir la fecha a formato relativo y determinar el intervalo
       function getRelativeTime(date) {
         const now = new Date();
-        const diffInSeconds = Math.floor((now - date) / 1000); // Diferencia en segundos
+        const diffInSeconds = Math.floor((now - date) / 1000);
 
         if (diffInSeconds < 60) {
           return {
             text: `${diffInSeconds} second${diffInSeconds !== 1 ? 's' : ''} ago`,
-            interval: 1000 // Actualizar cada segundo
+            interval: 1000
           };
         }
 
@@ -182,7 +192,7 @@
         if (diffInMinutes < 60) {
           return {
             text: `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`,
-            interval: 60000 // Actualizar cada minuto
+            interval: 60000
           };
         }
 
@@ -190,7 +200,7 @@
         if (diffInHours < 24) {
           return {
             text: `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`,
-            interval: 3600000 // Actualizar cada hora
+            interval: 3600000
           };
         }
 
@@ -198,7 +208,7 @@
         if (diffInDays < 30) {
           return {
             text: `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`,
-            interval: 3600000 // Actualizar cada hora
+            interval: 3600000
           };
         }
 
@@ -206,28 +216,27 @@
         if (diffInMonths < 12) {
           return {
             text: `${diffInMonths} month${diffInMonths !== 1 ? 's' : ''} ago`,
-            interval: 3600000 // Actualizar cada hora
+            interval: 3600000
           };
         }
 
         const diffInYears = Math.floor(diffInMonths / 12);
         return {
           text: `${diffInYears} year${diffInYears !== 1 ? 's' : ''} ago`,
-          interval: 3600000 // Actualizar cada hora
+          interval: 3600000
         };
       }
 
       // Función para actualizar el texto y el intervalo de actualización
-      function updateLastWinText(name = "Unknown") {
+      function updateLastWinText() {
         if (lastWinDate) {
           const { text, interval } = getRelativeTime(lastWinDate);
           lastWinText.textContent = `Last time beaten: ${text} by ${lastWinnerName}`;
 
-
           // Si el intervalo ha cambiado, actualizamos el setInterval
           if (!updateInterval || updateInterval.interval !== interval) {
             if (updateInterval) {
-              clearInterval(updateInterval.id); // Limpiar el intervalo anterior
+              clearInterval(updateInterval.id);
             }
             updateInterval = {
               id: setInterval(updateLastWinText, interval),
@@ -246,13 +255,12 @@
             console.log("Documento obtenido:", doc.exists, doc.data());
             if (doc.exists && doc.data().timestamp) {
               lastWinDate = doc.data().timestamp.toDate();
-              lastWinnerName = doc.data().name || "Unknown"; // <--- GUARDAMOS EL NOMBRE
+              lastWinnerName = doc.data().name || "Unknown";
               updateLastWinText();
-            }
-            else {
+            } else {
               lastWinText.textContent = `Last time beaten: Never`;
               if (updateInterval) {
-                clearInterval(updateInterval.id); // Detener cualquier intervalo si no hay fecha
+                clearInterval(updateInterval.id);
                 updateInterval = null;
               }
             }
@@ -261,95 +269,66 @@
             console.error("Error al cargar la última victoria:", error);
             lastWinText.textContent = `Last time beaten: Error`;
             if (updateInterval) {
-              clearInterval(updateInterval.id); // Detener cualquier intervalo en caso de error
+              clearInterval(updateInterval.id);
               updateInterval = null;
             }
           });
       }
 
-      // Función para actualizar la fecha de victoria
-      function updateLastWin(name) {
-        const timestamp = firebase.firestore.Timestamp.fromDate(new Date());
-        db.collection('levelCompletion').doc('lastCompletion').set({
-          timestamp: timestamp,
-          name: name
-        })
-        .then(() => {
-          loadLastWin(); // Recargar y mostrar
-        })
-        .catch((error) => {
-          console.error("Error al actualizar la última victoria:", error);
-        });
-      }
-
-      // Cargar la última fecha al iniciar
-      loadLastWin();
-
       // Lógica del botón Try
-      tryButton.addEventListener('click', () => {
-        let chance = (maxLevel - currentLevel) * 0.1;  // De 0.9 a 0.1
-        const randomValue = Math.random();
-        const success = randomValue < chance;
+      tryButton.addEventListener('click', async () => {
+        try {
+          statusText.textContent = "Cargando...";
+          const result = await functions.httpsCallable("tryLevel")({ currentLevel });
+          const { success, newLevel, status, nextChance } = result.data;
 
-        // Depuración
-        console.log(`Nivel actual: ${currentLevel}`);
-        console.log(`Probabilidad de éxito: ${chance * 100}%`);
-        console.log(`Valor aleatorio: ${randomValue}`);
-        console.log(`Éxito: ${success}`);
+          currentLevel = newLevel;
+          statusText.textContent = status;
 
-        if (success) {
-          if (currentLevel < maxLevel) {
-            currentLevel++;
-            console.log(`Avanzaste al nivel: ${currentLevel}`);
-          }
-        } else {
-            // Marcar barras completadas como fallidas (rojas)
+          if (success) {
+            updateBar();
+            if (currentLevel === maxLevel) {
+              body.style.backgroundColor = "green";
+              winSound.currentTime = 0;
+              winSound.play();
+              showNameModal();
+              tryButton.disabled = true;
+              setTimeout(() => {
+                body.style.backgroundColor = "white";
+              }, 2000);
+            } else {
+              statusText.textContent = `The next click has a ${nextChance}% chance of success.`;
+            }
+          } else {
+            // Animación de fallo
             barSections.forEach((section, index) => {
               if (index < currentLevel) {
-                section.classList.add('failed');
+                section.classList.add("failed");
               }
             });
 
-            // Revertir a "vacías" luego de 50ms
             setTimeout(() => {
-              barSections.forEach((section, index) => {
-                section.classList.remove('failed');
-                section.classList.remove('filled');
+              barSections.forEach((section) => {
+                section.classList.remove("failed");
+                section.classList.remove("filled");
               });
               currentLevel = 0;
-              updateBar(); // Por si acaso
+              updateBar();
               statusText.textContent = `The next click has a 90% chance of success.`;
             }, 50);
 
-            console.log(`Fallaste. Nivel reiniciado a: 0`);
             const randomSound = failSounds[Math.floor(Math.random() * failSounds.length)];
             randomSound.currentTime = 0;
             randomSound.play();
           }
-
-
-        updateBar();
-
-        if (currentLevel === maxLevel) {
-          statusText.textContent = "You did it!";
-          body.style.backgroundColor = 'green';
-          winSound.currentTime = 0;
-          winSound.play();
-
-          showNameModal(); // Mostrar ventana para ingresar el nombre
-          tryButton.disabled = true;
-
-
-
-          setTimeout(() => {
-            body.style.backgroundColor = 'white';
-          }, 2000);
-        } else {
-          let nextChance = (maxLevel - currentLevel) * 10;
-          statusText.textContent = `The next click has a ${nextChance}% chance of success.`;
+        } catch (error) {
+          console.error("Error al intentar nivel:", error);
+          statusText.textContent = "Error en el servidor. Intenta de nuevo.";
         }
       });
 
+      // Cargar la última fecha al iniciar
+      loadLastWin();
       updateBar();
     }
   </script>
