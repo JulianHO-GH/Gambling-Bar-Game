@@ -277,55 +277,56 @@
 
       // Lógica del botón Try
       tryButton.addEventListener('click', async () => {
-        try {
-          statusText.textContent = "Cargando...";
-          const result = await functions.httpsCallable("tryLevel")({ currentLevel });
-          const { success, newLevel, status, nextChance } = result.data;
+  try {
+    statusText.textContent = "Cargando...";
+    console.log("Enviando currentLevel:", currentLevel); // Log del nivel enviado
+    const result = await functions.httpsCallable("tryLevel")({ currentLevel });
+    console.log("Respuesta de tryLevel:", result.data); // Log de la respuesta
+    const { success, newLevel, status, nextChance } = result.data;
 
-          currentLevel = newLevel;
-          statusText.textContent = status;
+    currentLevel = newLevel;
+    statusText.textContent = status;
 
-          if (success) {
-            updateBar();
-            if (currentLevel === maxLevel) {
-              body.style.backgroundColor = "green";
-              winSound.currentTime = 0;
-              winSound.play();
-              showNameModal();
-              tryButton.disabled = true;
-              setTimeout(() => {
-                body.style.backgroundColor = "white";
-              }, 2000);
-            } else {
-              statusText.textContent = `The next click has a ${nextChance}% chance of success.`;
-            }
-          } else {
-            // Animación de fallo
-            barSections.forEach((section, index) => {
-              if (index < currentLevel) {
-                section.classList.add("failed");
-              }
-            });
-
-            setTimeout(() => {
-              barSections.forEach((section) => {
-                section.classList.remove("failed");
-                section.classList.remove("filled");
-              });
-              currentLevel = 0;
-              updateBar();
-              statusText.textContent = `The next click has a 90% chance of success.`;
-            }, 50);
-
-            const randomSound = failSounds[Math.floor(Math.random() * failSounds.length)];
-            randomSound.currentTime = 0;
-            randomSound.play();
-          }
-        } catch (error) {
-          console.error("Error al intentar nivel:", error);
-          statusText.textContent = "Error en el servidor. Intenta de nuevo.";
+    if (success) {
+      updateBar();
+      if (currentLevel === maxLevel) {
+        body.style.backgroundColor = "green";
+        winSound.currentTime = 0;
+        winSound.play();
+        showNameModal();
+        tryButton.disabled = true;
+        setTimeout(() => {
+          body.style.backgroundColor = "white";
+        }, 2000);
+      } else {
+        statusText.textContent = `The next click has a ${nextChance}% chance of success.`;
+      }
+    } else {
+      barSections.forEach((section, index) => {
+        if (index < currentLevel) {
+          section.classList.add("failed");
         }
       });
+
+      setTimeout(() => {
+        barSections.forEach((section) => {
+          section.classList.remove("failed");
+          section.classList.remove("filled");
+        });
+        currentLevel = 0;
+        updateBar();
+        statusText.textContent = `The next click has a 90% chance of success.`;
+      }, 50);
+
+      const randomSound = failSounds[Math.floor(Math.random() * failSounds.length)];
+      randomSound.currentTime = 0;
+      randomSound.play();
+    }
+  } catch (error) {
+    console.error("Error al intentar nivel:", error);
+    statusText.textContent = "Error en el servidor. Intenta de nuevo.";
+  }
+});
 
       // Cargar la última fecha al iniciar
       loadLastWin();

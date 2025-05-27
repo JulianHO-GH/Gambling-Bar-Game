@@ -14,7 +14,12 @@ exports.tryLevel = functions.https.onCall(async (data, context) => {
 
   const chance = (maxLevel - currentLevel) * 0.1
   const randomValue = Math.random()
-  const success = randomValue < chance
+  const success = currentLevel === 1 ? true : randomValue < chance
+
+  console.log(
+    `tryLevel: currentLevel=${currentLevel}, chance=${chance}, ` +
+    `randomValue=${randomValue}, success=${success}`
+  )
 
   let newLevel = currentLevel
   let status = ''
@@ -51,10 +56,7 @@ exports.updateLastWin = functions.https.onCall(async (data, context) => {
   await admin.firestore()
     .collection('levelCompletion')
     .doc('lastCompletion')
-    .set({
-      timestamp,
-      name: playerName
-    })
+    .set({timestamp, name: playerName})
 
   return {success: true, message: 'Última victoria actualizada'}
 })
