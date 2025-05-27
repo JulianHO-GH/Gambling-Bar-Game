@@ -5,37 +5,38 @@ admin.initializeApp()
 
 exports.tryLevel = functions.https.onCall(async (data, context) => {
   const maxLevel = 9
-  const currentLevel = data.currentLevel || 0
+  const currentLevel = Number(data.currentLevel) || 0
 
   if (typeof currentLevel !== 'number' || currentLevel < 0 ||
-      currentLevel > maxLevel) {
+      currentLevel > maxLevel || !Number.isInteger(currentLevel)) {
     throw new functions.https.HttpsError('invalid-argument', 'Nivel inválido')
   }
 
   const chance = (maxLevel - currentLevel) * 0.1
   const randomValue = Math.random()
-  const success = currentLevel === 1 ? true : randomValue < chance
+  const success = randomValue < chance
 
   console.log(
-    `tryLevel: currentLevel=${currentLevel}, chance=${chance}, ` +
-    `randomValue=${randomValue}, success=${success}`
+    `tryLevel: currentLevel=${currentLevel}, ` +
+    `chance=${chance}, randomValue=${randomValue}, success=${success}`
   )
 
   let newLevel = currentLevel
   let status = ''
 
-  if (success) {
-    if (currentLevel < maxLevel) {
-      newLevel = currentLevel + 1
-      status = `Avanzaste al nivel ${newLevel}`
-    }
-  } else {
+  if (success && currentLevel < maxLevel) {
+    newLevel = currentLevel + 1
+    status = `Avanzaste al nivel ${newLevel}`
+    console.log(`Éxito: newLevel=${newLevel}, status=${status}`)
+  } else if (!success) {
     newLevel = 0
     status = 'Fallaste. Nivel reiniciado.'
-  }
-
-  if (newLevel === maxLevel) {
-    status = '¡Ganaste! Ingresa tu nombre.'
+    console.log(`Fallo: newLevel=${newLevel}, status=${status}`)
+  } else {
+    const winStatus = '¡Ganaste! Ingresa tu nombre.'
+    const maxStatus = 'Nivel máximo alcanzado.'
+    status = currentLevel === maxLevel ? winStatus : maxStatus
+    console.log(`Caso especial: newLevel=${newLevel}, status=${status}`)
   }
 
   return {
