@@ -284,7 +284,7 @@
     console.log("Respuesta de tryLevel:", result.data);
     const { success, newLevel, status, nextChance } = result.data;
 
-    currentLevel = newLevel; // Elimina la asignación redundante
+    currentLevel = newLevel; // Eliminada la asignación redundante
     statusText.textContent = status;
 
     if (success) {

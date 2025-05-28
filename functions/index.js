@@ -16,7 +16,7 @@ exports.tryLevel = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('invalid-argument', 'Nivel inválido')
   }
 
-  const chance = (maxLevel - currentLevel) * 0.1
+  const chance = (9 - currentLevel) * 0.1
   const randomValue = Math.random()
   const success = randomValue < chance
 
@@ -30,23 +30,24 @@ exports.tryLevel = functions.https.onCall(async (data, context) => {
     newLevel = currentLevel + 1
     status = `Avanzaste al nivel ${newLevel}`
     console.log(`Éxito: newLevel=${newLevel}, status=${status}`)
-  } else if (!success) {
+  } else if (success && currentLevel === maxLevel) {
+    newLevel = maxLevel
+    status = '¡Ganaste! Ingresa tu nombre.'
+    console.log(`Ganador: newLevel=${newLevel}, status=${status}`)
+  } else {
     newLevel = 0
     status = 'Fallaste. Nivel reiniciado.'
     console.log(`Fallo: newLevel=${newLevel}, status=${status}`)
-  } else {
-    status = '¡Ganaste! Ingresa tu nombre.'
-    console.log(`Ganador: newLevel=${newLevel}, status=${status}`)
   }
 
-  console.log(`Respuesta enviada: success=${success}, newLevel=${newLevel}, status=${status}`)
-  console.log(`nextChance=${newLevel < maxLevel ? (maxLevel - newLevel) * 10 : 0}`)
+  const nextChance = newLevel < maxLevel ? (9 - newLevel) * 10 : 0
+  console.log(`Respuesta: success=${success}, newLevel=${newLevel}, status=${status}, nextChance=${nextChance}`)
 
   return {
     success,
     newLevel,
     status,
-    nextChance: newLevel < maxLevel ? (maxLevel - newLevel) * 10 : 0
+    nextChance
   }
 })
 
