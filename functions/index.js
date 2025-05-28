@@ -4,11 +4,15 @@ const admin = require('firebase-admin')
 admin.initializeApp()
 
 exports.tryLevel = functions.https.onCall(async (data, context) => {
-  const maxLevel = 9
+  const maxLevel = 8
   const currentLevel = Number(data.currentLevel) || 0
+
+  console.log('--- tryLevel llamada ---')
+  console.log(`Input: currentLevel=${currentLevel}, type=${typeof currentLevel}`)
 
   if (typeof currentLevel !== 'number' || currentLevel < 0 ||
       currentLevel > maxLevel || !Number.isInteger(currentLevel)) {
+    console.log('Error: Nivel inválido')
     throw new functions.https.HttpsError('invalid-argument', 'Nivel inválido')
   }
 
@@ -16,14 +20,12 @@ exports.tryLevel = functions.https.onCall(async (data, context) => {
   const randomValue = Math.random()
   const success = randomValue < chance
 
-  console.log(
-    `tryLevel: currentLevel=${currentLevel}, ` +
-    `chance=${chance}, randomValue=${randomValue}, success=${success}`
-  )
+  console.log(`chance=${chance}, randomValue=${randomValue}, success=${success}`)
 
   let newLevel = currentLevel
   let status = ''
 
+  console.log(`Evaluando: success=${success}, currentLevel=${currentLevel}, maxLevel=${maxLevel}`)
   if (success && currentLevel < maxLevel) {
     newLevel = currentLevel + 1
     status = `Avanzaste al nivel ${newLevel}`
@@ -33,11 +35,12 @@ exports.tryLevel = functions.https.onCall(async (data, context) => {
     status = 'Fallaste. Nivel reiniciado.'
     console.log(`Fallo: newLevel=${newLevel}, status=${status}`)
   } else {
-    const winStatus = '¡Ganaste! Ingresa tu nombre.'
-    const maxStatus = 'Nivel máximo alcanzado.'
-    status = currentLevel === maxLevel ? winStatus : maxStatus
-    console.log(`Caso especial: newLevel=${newLevel}, status=${status}`)
+    status = '¡Ganaste! Ingresa tu nombre.'
+    console.log(`Ganador: newLevel=${newLevel}, status=${status}`)
   }
+
+  console.log(`Respuesta enviada: success=${success}, newLevel=${newLevel}, status=${status}`)
+  console.log(`nextChance=${newLevel < maxLevel ? (maxLevel - newLevel) * 10 : 0}`)
 
   return {
     success,

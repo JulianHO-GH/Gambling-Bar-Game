@@ -124,7 +124,7 @@
       const functions = firebase.functions();
 
       let currentLevel = 0;
-      const maxLevel = 9;
+      const maxLevel = 8;
       const barSections = document.querySelectorAll('.bar-section');
       const tryButton = document.getElementById('tryButton');
       const statusText = document.getElementById('statusText');
@@ -279,12 +279,12 @@
       tryButton.addEventListener('click', async () => {
   try {
     statusText.textContent = "Cargando...";
-    console.log("Enviando currentLevel:", currentLevel); // Log del nivel enviado
+    console.log("Enviando currentLevel:", currentLevel);
     const result = await functions.httpsCallable("tryLevel")({ currentLevel });
-    console.log("Respuesta de tryLevel:", result.data); // Log de la respuesta
+    console.log("Respuesta de tryLevel:", result.data);
     const { success, newLevel, status, nextChance } = result.data;
 
-    currentLevel = newLevel;
+    currentLevel = newLevel; // Elimina la asignación redundante
     statusText.textContent = status;
 
     if (success) {
