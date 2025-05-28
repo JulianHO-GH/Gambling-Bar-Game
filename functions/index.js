@@ -7,7 +7,7 @@ exports.tryLevel = functions.https.onCall(async (data, context) => {
   const maxLevel = 8
   const currentLevel = Number(data.currentLevel) || 0
 
-  console.log('--- tryLevel llamada ---')
+  console.log('--- tryLevel v20250528 ---') // Identificador único
   console.log(`Input: currentLevel=${currentLevel}, type=${typeof currentLevel}`)
 
   if (typeof currentLevel !== 'number' || currentLevel < 0 ||
