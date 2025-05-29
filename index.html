@@ -283,7 +283,7 @@
     const result = await functions.httpsCallable("tryLevel")({ currentLevel });
     console.log("Respuesta de tryLevel:", result.data);
     const { success, newLevel, status, nextChance } = result.data;
-
+    newLevel = currentLevel + 1;
     currentLevel = newLevel; // Eliminada la asignación redundante
     statusText.textContent = status;
 
