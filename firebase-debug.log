@@ -1,0 +1,82 @@
+[debug] [2025-05-29T18:22:31.004Z] ----------------------------------------------------------------------
+[debug] [2025-05-29T18:22:31.016Z] Command:       D:\nodejs\node.exe C:\Users\julia\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions
+[debug] [2025-05-29T18:22:31.017Z] CLI Version:   14.4.0
+[debug] [2025-05-29T18:22:31.018Z] Platform:      win32
+[debug] [2025-05-29T18:22:31.018Z] Node Version:  v22.15.0
+[debug] [2025-05-29T18:22:31.019Z] Time:          Thu May 29 2025 13:22:31 GMT-0500 (hora estándar de Colombia)
+[debug] [2025-05-29T18:22:31.020Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-05-29T18:22:31.671Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-05-29T18:22:31.673Z] > authorizing via signed-in user (juliancitohernandez2006@gmail.com)
+[debug] [2025-05-29T18:22:31.673Z] [iam] checking project lasttimebeatendate for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2025-05-29T18:22:31.676Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:31.677Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:31.679Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/lasttimebeatendate:testIamPermissions [none]
+[debug] [2025-05-29T18:22:31.679Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/lasttimebeatendate:testIamPermissions x-goog-quota-user=projects/lasttimebeatendate
+[debug] [2025-05-29T18:22:31.680Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/lasttimebeatendate:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-05-29T18:22:32.525Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/lasttimebeatendate:testIamPermissions 200
+[debug] [2025-05-29T18:22:32.526Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/lasttimebeatendate:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-05-29T18:22:32.528Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:32.528Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:32.528Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/lasttimebeatendate/serviceAccounts/lasttimebeatendate@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2025-05-29T18:22:32.529Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/lasttimebeatendate/serviceAccounts/lasttimebeatendate@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-05-29T18:22:33.230Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/lasttimebeatendate/serviceAccounts/lasttimebeatendate@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2025-05-29T18:22:33.230Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/lasttimebeatendate/serviceAccounts/lasttimebeatendate@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'lasttimebeatendate'...
+[info] 
+[info] i  deploying functions 
+[info] Running command: npm --prefix "$RESOURCE_DIR" run lint
+[info] +  functions: Finished running predeploy script. 
+[debug] [2025-05-29T18:22:39.216Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:39.217Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:39.217Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/cloudresourcemanager.googleapis.com [none]
+[debug] [2025-05-29T18:22:39.217Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/cloudresourcemanager.googleapis.com x-goog-quota-user=projects/lasttimebeatendate
+[debug] [2025-05-29T18:22:40.234Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/cloudresourcemanager.googleapis.com 200
+[debug] [2025-05-29T18:22:40.234Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/cloudresourcemanager.googleapis.com [omitted]
+[debug] [2025-05-29T18:22:40.235Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:40.235Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:40.235Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/lasttimebeatendate [none]
+[debug] [2025-05-29T18:22:40.866Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/lasttimebeatendate 200
+[debug] [2025-05-29T18:22:40.867Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/lasttimebeatendate {"projectNumber":"757795644080","projectId":"lasttimebeatendate","lifecycleState":"ACTIVE","name":"lasttimebeatendate","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-04-13T02:12:41.982904Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[debug] [2025-05-29T18:22:40.871Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:40.872Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:40.872Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:40.873Z] Checked if tokens are valid: true, expires at: 1748544445147
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[debug] [2025-05-29T18:22:40.874Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:40.874Z] Checked if tokens are valid: true, expires at: 1748544445147
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2025-05-29T18:22:40.875Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:40.875Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:40.876Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-05-29T18:22:40.876Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/lasttimebeatendate
+[debug] [2025-05-29T18:22:40.878Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/runtimeconfig.googleapis.com [none]
+[debug] [2025-05-29T18:22:40.879Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/runtimeconfig.googleapis.com x-goog-quota-user=projects/lasttimebeatendate
+[debug] [2025-05-29T18:22:40.883Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/cloudbuild.googleapis.com [none]
+[debug] [2025-05-29T18:22:40.884Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/cloudbuild.googleapis.com x-goog-quota-user=projects/lasttimebeatendate
+[debug] [2025-05-29T18:22:40.890Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/artifactregistry.googleapis.com [none]
+[debug] [2025-05-29T18:22:40.890Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/artifactregistry.googleapis.com x-goog-quota-user=projects/lasttimebeatendate
+[debug] [2025-05-29T18:22:41.479Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/cloudfunctions.googleapis.com 200
+[debug] [2025-05-29T18:22:41.479Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/cloudfunctions.googleapis.com [omitted]
+[info] +  functions: required API cloudfunctions.googleapis.com is enabled 
+[debug] [2025-05-29T18:22:41.784Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/runtimeconfig.googleapis.com 200
+[debug] [2025-05-29T18:22:41.785Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/runtimeconfig.googleapis.com [omitted]
+[debug] [2025-05-29T18:22:41.790Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/cloudbuild.googleapis.com 200
+[debug] [2025-05-29T18:22:41.791Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/cloudbuild.googleapis.com [omitted]
+[info] +  functions: required API cloudbuild.googleapis.com is enabled 
+[debug] [2025-05-29T18:22:41.794Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/artifactregistry.googleapis.com 200
+[debug] [2025-05-29T18:22:41.794Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/lasttimebeatendate/services/artifactregistry.googleapis.com [omitted]
+[info] +  artifactregistry: required API artifactregistry.googleapis.com is enabled 
+[debug] [2025-05-29T18:22:41.795Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:41.796Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:41.796Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/lasttimebeatendate/adminSdkConfig [none]
+[debug] [2025-05-29T18:22:42.430Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/lasttimebeatendate/adminSdkConfig 200
+[debug] [2025-05-29T18:22:42.430Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/lasttimebeatendate/adminSdkConfig {"projectId":"lasttimebeatendate","storageBucket":"lasttimebeatendate.firebasestorage.app"}
+[debug] [2025-05-29T18:22:42.432Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:42.432Z] Checked if tokens are valid: true, expires at: 1748544445147
+[debug] [2025-05-29T18:22:42.432Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/lasttimebeatendate/configs [none]
+[debug] [2025-05-29T18:22:43.170Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/lasttimebeatendate/configs 200
+[debug] [2025-05-29T18:22:43.171Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/lasttimebeatendate/configs {}
