@@ -46,6 +46,7 @@ exports.tryLevel = functions.https.onCall(async (data, context) => {
 
   return {
     success,
+    currentLevel,
     newLevel,
     status,
     nextChance
