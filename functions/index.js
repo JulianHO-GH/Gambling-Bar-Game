@@ -28,6 +28,7 @@ exports.tryLevel = functions.https.onCall(async (data, context) => {
   console.log(`Evaluando: success=${success}, currentLevel=${currentLevel}, maxLevel=${maxLevel}`)
   if (success) {
     newLevel = currentLevel < maxLevel ? currentLevel + 1 : maxLevel
+    newLevel = currentLevel + 1; //BORRAR ESTO, PARA TESTEO NOMÁS
     status = currentLevel < maxLevel ? `Avanzaste al nivel ${newLevel}` : '¡Ganaste! Ingresa tu nombre.'
     console.log(`Éxito: newLevel=${newLevel}, status=${status}`)
   } else {
