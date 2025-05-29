@@ -5,7 +5,7 @@ admin.initializeApp()
 
 exports.tryLevel = functions.https.onCall(async (data, context) => {
   const maxLevel = 8
-  const currentLevel = Number(data.currentLevel) || 0
+  let currentLevel = Number(data.currentLevel) || 0
 
   console.log('--- tryLevel v20250528 ---') // Identificador único
   console.log(`Input: currentLevel=${currentLevel}, type=${typeof currentLevel}`)
@@ -28,6 +28,7 @@ exports.tryLevel = functions.https.onCall(async (data, context) => {
   console.log(`Evaluando: success=${success}, currentLevel=${currentLevel}, maxLevel=${maxLevel}`)
   if (success && currentLevel < maxLevel) {
     newLevel = currentLevel + 1
+    currentLevel = newLevel
     status = `Avanzaste al nivel ${newLevel}`
     console.log(`Éxito: newLevel=${newLevel}, status=${status}`)
   } else if (success && currentLevel === maxLevel) {
