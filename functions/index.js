@@ -7,8 +7,8 @@ exports.tryLevel = functions.https.onCall(async (data, context) => {
   const maxLevel = 8
   const currentLevel = Number(data.currentLevel) || 0
 
-  console.log('--- tryLevel v20250529 ---') // Identificador único
-  console.log(`Input: currentLevel=${currentLevel}, type=${typeof currentLevel}`)
+  console.log('--- tryLevel v20250529b ---') // Nueva versión
+  console.log(`Input: currentLevel=${currentLevel}, type=${typeof currentLevel}, raw=${data.currentLevel}`)
 
   if (typeof currentLevel !== 'number' || currentLevel < 0 ||
       currentLevel > maxLevel || !Number.isInteger(currentLevel)) {
@@ -26,14 +26,10 @@ exports.tryLevel = functions.https.onCall(async (data, context) => {
   let status = ''
 
   console.log(`Evaluando: success=${success}, currentLevel=${currentLevel}, maxLevel=${maxLevel}`)
-  if (success && currentLevel < maxLevel) {
-    newLevel = currentLevel + 1
-    status = `Avanzaste al nivel ${newLevel}`
+  if (success) {
+    newLevel = currentLevel < maxLevel ? currentLevel + 1 : maxLevel
+    status = currentLevel < maxLevel ? `Avanzaste al nivel ${newLevel}` : '¡Ganaste! Ingresa tu nombre.'
     console.log(`Éxito: newLevel=${newLevel}, status=${status}`)
-  } else if (success && currentLevel === maxLevel) {
-    newLevel = maxLevel
-    status = '¡Ganaste! Ingresa tu nombre.'
-    console.log(`Ganador: newLevel=${newLevel}, status=${status}`)
   } else {
     newLevel = 0
     status = 'Fallaste. Nivel reiniciado.'
