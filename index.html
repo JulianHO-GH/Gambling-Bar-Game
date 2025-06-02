@@ -280,7 +280,7 @@
         try {
           statusText.textContent = "Cargando...";
           console.log("Enviando currentLevel:", currentLevel);
-          const result = await functions.httpsCallable("tryLevel")({ currentLevel });
+          const result = await functions.httpsCallable("tryLevel")({ currentLevel: currentLevel });
           console.log("Respuesta de tryLevel:", result.data);
           const { success, newLevel, status, nextChance } = result.data;
 
