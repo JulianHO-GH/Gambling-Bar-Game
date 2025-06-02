@@ -279,8 +279,11 @@
       tryButton.addEventListener('click', async () => {
         try {
           statusText.textContent = "Cargando...";
-          console.log("Enviando currentLevel:", currentLevel);
-          const result = await functions.httpsCallable("tryLevel")({ currentLevel: currentLevel });
+          console.log('Enviando:', { currentLevel, type: typeof currentLevel });
+          const tryLevel = functions.httpsCallable('tryLevel');
+          // Luego llama así:
+          
+          const result = await tryLevel({ currentLevel });
           console.log("Respuesta de tryLevel:", result.data);
           const { success, newLevel, status, nextChance } = result.data;
 

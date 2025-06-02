@@ -4,11 +4,12 @@ const admin = require('firebase-admin')
 admin.initializeApp()
 
 exports.tryLevel = functions.https.onCall(async (data, context) => {
-  const maxLevel = 8
-  const currentLevel = Number(data.currentLevel) || 0
+  console.log('Datos recibidos:', JSON.stringify(data)); // <-- Añade esta línea
+  const maxLevel = 8;
+  const currentLevel = Number(data?.currentLevel) || 0;
 
-  console.log('--- tryLevel v20250529b ---') // Nueva versión
-  console.log(`Input: currentLevel=${currentLevel}, type=${typeof currentLevel}, raw=${data.currentLevel}`)
+  console.log('--- tryLevel v20250602 ---'); // Actualiza la versión
+  console.log(`Input: currentLevel=${currentLevel}, type=${typeof currentLevel}, raw=${data?.currentLevel}, fullData=${JSON.stringify(data)}`);
 
   if (typeof currentLevel !== 'number' || currentLevel < 0 ||
       currentLevel > maxLevel || !Number.isInteger(currentLevel)) {
