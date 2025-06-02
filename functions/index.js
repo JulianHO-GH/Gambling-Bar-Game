@@ -3,62 +3,82 @@ const admin = require('firebase-admin')
 
 admin.initializeApp()
 
+// Game configuration
+const GAME_CONFIG = {
+  maxLevel: 8, // 0-8 makes 9 levels total
+  baseSuccessChance: 0.9, // 90% at level 0
+  chanceDecrement: 0.1 // Decreases by 10% each level
+}
+
 exports.tryLevel = functions.https.onCall(async (data, context) => {
-  console.log('Datos recibidos:', JSON.stringify(data)); // <-- Añade esta línea
-  const maxLevel = 8;
-  const currentLevel = Number(data?.currentLevel) || 0;
+  try {
+    const currentLevel = parseInt(data.currentLevel) || 0
+    // Validate input
+    if (isNaN(currentLevel)) {
+      throw new functions.https.HttpsError('invalid-argument', 'Invalid level')
+    }
+    if (currentLevel < 0 || currentLevel > GAME_CONFIG.maxLevel) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        `Level must be between 0 and ${GAME_CONFIG.maxLevel}`
+      )
+    }
 
-  console.log('--- tryLevel v20250602 ---'); // Actualiza la versión
-  console.log(`Input: currentLevel=${currentLevel}, type=${typeof currentLevel}, raw=${data?.currentLevel}, fullData=${JSON.stringify(data)}`);
+    // Calculate current success chance
+    const successChance = GAME_CONFIG.baseSuccessChance - (currentLevel * GAME_CONFIG.chanceDecrement)
+    const success = Math.random() < successChance
 
-  if (typeof currentLevel !== 'number' || currentLevel < 0 ||
-      currentLevel > maxLevel || !Number.isInteger(currentLevel)) {
-    console.log('Error: Nivel inválido')
-    throw new functions.https.HttpsError('invalid-argument', 'Nivel inválido')
-  }
+    let newLevel, status
 
-  const chance = (9 - currentLevel) * 0.1
-  const randomValue = Math.random()
-  const success = randomValue < chance
+    if (success) {
+      newLevel = currentLevel + 1
+      status = newLevel <= GAME_CONFIG.maxLevel
+        ? `Advanced to level ${newLevel}`
+        : 'You won! Enter your name.'
+    } else {
+      newLevel = 0
+      status = 'Failed. Level reset.'
+    }
 
-  console.log(`chance=${chance}, randomValue=${randomValue}, success=${success}`)
+    // Calculate next level's chance if not at max
+    const nextChance = newLevel <= GAME_CONFIG.maxLevel
+      ? Math.round((GAME_CONFIG.baseSuccessChance - (newLevel * GAME_CONFIG.chanceDecrement)) * 100)
+      : 0
 
-  let newLevel = currentLevel
-  let status = ''
-
-  console.log(`Evaluando: success=${success}, currentLevel=${currentLevel}, maxLevel=${maxLevel}`)
-  if (success) {
-    newLevel = currentLevel < maxLevel ? currentLevel + 1 : maxLevel
-    status = currentLevel < maxLevel ? `Avanzaste al nivel ${newLevel}` : '¡Ganaste! Ingresa tu nombre.'
-    console.log(`Éxito: newLevel=${newLevel}, status=${status}`)
-  } else {
-    newLevel = 0
-    status = 'Fallaste. Nivel reiniciado.'
-    console.log(`Fallo: newLevel=${newLevel}, status=${status}`)
-  }
-
-  const nextChance = newLevel < maxLevel ? (9 - newLevel) * 10 : 0
-  console.log(`Respuesta: success=${success}, newLevel=${newLevel}, status=${status}, nextChance=${nextChance}`)
-
-  return {
-    success,
-    newLevel,
-    status,
-    nextChance
+    return {
+      success,
+      newLevel,
+      status,
+      nextChance,
+      currentChance: Math.round(successChance * 100)
+    }
+  } catch (error) {
+    console.error('Error in tryLevel:', error)
+    throw new functions.https.HttpsError('internal', 'Failed to process level attempt')
   }
 })
 
 exports.updateLastWin = functions.https.onCall(async (data, context) => {
-  const playerName = data.playerName
-  if (typeof playerName !== 'string' || playerName.trim() === '') {
-    throw new functions.https.HttpsError('invalid-argument', 'Nombre inválido')
+  try {
+    const playerName = (data.playerName || '').trim()
+
+    if (!playerName) {
+      throw new functions.https.HttpsError('invalid-argument', 'Name is required')
+    }
+
+    const timestamp = admin.firestore.FieldValue.serverTimestamp()
+
+    await admin.firestore()
+      .collection('levelCompletion')
+      .doc('lastCompletion')
+      .set({
+        timestamp,
+        name: playerName
+      })
+
+    return {success: true, message: 'Last win updated successfully'}
+  } catch (error) {
+    console.error('Error updating last win:', error)
+    throw new functions.https.HttpsError('internal', 'Failed to update last win')
   }
-
-  const timestamp = admin.firestore.Timestamp.now()
-  await admin.firestore()
-    .collection('levelCompletion')
-    .doc('lastCompletion')
-    .set({timestamp, name: playerName})
-
-  return {success: true, message: 'Última victoria actualizada'}
 })
