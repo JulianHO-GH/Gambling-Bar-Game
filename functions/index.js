@@ -3,83 +3,130 @@ const admin = require('firebase-admin')
 
 admin.initializeApp()
 
-// Game configuration - now with explicit probability curve
+// Game configuration
 const GAME_CONFIG = {
   maxLevel: 8,
-  probabilityCurve: [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1] // Level 0 to 8
+  initialProbability: 0.9, // 90% chance at level 0
+  probabilityStep: 0.1// Decreases by 10% each level
 }
 
-exports.tryLevel = functions.https.onCall(async (data, context) => {
-  const currentLevel = parseInt(data.currentLevel, 10) || 0
-  const clientSeed = data.clientSeed || Math.random().toString(36).substring(2, 15)
-  const serverSeed = Math.random().toString(36).substring(2, 15)
+exports.attemptLevel = functions.https.onCall(async (data, context) => {
+  // Validate session token if you implement authentication later
+  const sessionToken = data.sessionToken || null
+
+  // Validate current attempt data
+  if (typeof data.currentAttempt !== 'object' || data.currentAttempt === null) {
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid attempt data structure')
+  }
+
+  const {level, clientSeed} = data.currentAttempt
 
   // Validate level
-  if (currentLevel < 0 || currentLevel > GAME_CONFIG.maxLevel) {
+  if (typeof level !== 'number' || level < 0 || level > GAME_CONFIG.maxLevel) {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      `Invalid level. Must be between 0 and ${GAME_CONFIG.maxLevel}`
+      `Level must be between 0 and ${GAME_CONFIG.maxLevel}`
     )
   }
 
-  // Calculate combined hash for deterministic randomness
-  const combinedSeed = clientSeed + serverSeed
+  // Validate client seed (could be used for more secure probability calculation)
+  if (typeof clientSeed !== 'string' || clientSeed.length < 8) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Invalid client verification seed'
+    )
+  }
+
+  // Calculate current level probability
+  const currentProbability = GAME_CONFIG.initialProbability - (level * GAME_CONFIG.probabilityStep)
+  const serverSeed = generateServerSeed()
+  const combinedSeed = `${clientSeed}:${serverSeed}`
+
+  // Generate deterministic outcome based on combined seeds
+  const outcomeValue = generateDeterministicOutcome(combinedSeed)
+  const success = outcomeValue < currentProbability
+
+  // Prepare response
+  const response = {
+    success,
+    serverSeed, // For verification purposes
+    probability: Math.round(currentProbability * 100),
+    nextLevel: success ? Math.min(level + 1, GAME_CONFIG.maxLevel) : 0,
+    isMaxLevel: success && level >= GAME_CONFIG.maxLevel - 1
+  }
+
+  // Add verification data if you want to prove fairness later
+  response.verification = {
+    combinedSeed,
+    outcomeValue,
+    threshold: currentProbability
+  }
+
+  return response
+})
+
+exports.recordWinner = functions.https.onCall(async (data, context) => {
+  // Basic validation
+  if (typeof data !== 'object' || data === null) {
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid data format')
+  }
+
+  const {playerName, finalLevel, verificationData} = data
+
+  // Validate player name
+  if (typeof playerName !== 'string' || playerName.trim().length < 2) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Player name must be at least 2 characters'
+    )
+  }
+
+  // Validate level (optional, could verify against verificationData)
+  if (typeof finalLevel !== 'number' || finalLevel !== GAME_CONFIG.maxLevel) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Invalid completion level'
+    )
+  }
+
+  // Store the winner with server timestamp
+  try {
+    await admin.firestore()
+      .collection('winners')
+      .doc('latest')
+      .set({
+        name: playerName.trim(),
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        level: finalLevel,
+        verified: Boolean(verificationData) // Could add more verification later
+      })
+
+    return {
+      status: 'SUCCESS',
+      message: 'Winner recorded successfully'
+    }
+  } catch (error) {
+    console.error('Error recording winner:', error)
+    throw new functions.https.HttpsError(
+      'internal',
+      'Failed to record winner'
+    )
+  }
+})
+
+// Helper functions for probability calculation
+function generateServerSeed () {
+  return Math.random().toString(36).substring(2, 15) +
+         Math.random().toString(36).substring(2, 15)
+}
+
+function generateDeterministicOutcome (seed) {
+  // Simple hash function for demonstration
   let hash = 0
-  for (let i = 0; i < combinedSeed.length; i++) {
-    hash = ((hash << 5) - hash) + combinedSeed.charCodeAt(i)
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
     hash |= 0 // Convert to 32bit integer
   }
-  const normalizedRandom = (hash % 10000) / 10000 // 0-0.9999
-
-  // Get current level probability
-  const successProbability = GAME_CONFIG.probabilityCurve[currentLevel]
-  const success = normalizedRandom < successProbability
-
-  // Determine new level
-  let newLevel = currentLevel
-  let status = ''
-  let isMaxLevel = false
-
-  if (success) {
-    newLevel = currentLevel + 1
-    isMaxLevel = newLevel > GAME_CONFIG.maxLevel
-    status = isMaxLevel
-      ? 'You won! Enter your name.'
-      : `Advanced to level ${newLevel}`
-  } else {
-    newLevel = 0
-    status = 'Failed. Level reset.'
-  }
-
-  return {
-    success,
-    newLevel,
-    status,
-    currentChance: Math.round(successProbability * 100),
-    nextChance: isMaxLevel
-      ? 0
-      : Math.round(GAME_CONFIG.probabilityCurve[newLevel] * 100),
-    serverSeed // Send back for verification
-  }
-})
-
-// (Keep the same updateLastWin function as before)
-exports.updateLastWin = functions.https.onCall(async (data, context) => {
-  const playerName = (data.playerName || '').trim()
-
-  if (!playerName) {
-    throw new functions.https.HttpsError('invalid-argument', 'Name is required')
-  }
-
-  const timestamp = admin.firestore.FieldValue.serverTimestamp()
-
-  await admin.firestore()
-    .collection('levelCompletion')
-    .doc('lastCompletion')
-    .set({
-      timestamp,
-      name: playerName
-    })
-
-  return {success: true, message: 'Last win updated successfully'}
-})
+  return Math.abs(hash % 10000) / 10000
+}

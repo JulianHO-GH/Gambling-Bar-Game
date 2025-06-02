@@ -2,149 +2,299 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Probability Gambling</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Probability Challenge</title>
   <style>
+    :root {
+      --primary-color: #2c3e50;
+      --success-color: #27ae60;
+      --danger-color: #e74c3c;
+      --warning-color: #f39c12;
+      --light-color: #ecf0f1;
+      --dark-color: #2c3e50;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-      background-color: #f5f5f5;
-      transition: background-color 0.3s;
-    }
-    #game-container {
-      max-width: 500px;
-      margin: 0 auto;
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    #statusText {
-      font-size: 1.3em;
-      margin: 20px 0;
-      min-height: 1.5em;
-    }
-    .bar-container {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--light-color);
+      color: var(--dark-color);
+      margin: 0;
+      padding: 0;
       display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin: 30px 0;
+      flex-direction: column;
+      min-height: 100vh;
     }
-    .bar-section {
-      width: 30px;
-      height: 100px;
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      flex: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .game-area {
+      background: white;
+      border-radius: 10px;
+      padding: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    .progress-display {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-bar {
+      height: 30px;
       background-color: #e0e0e0;
-      border-radius: 4px;
-      transition: background-color 0.3s;
+      border-radius: 15px;
+      overflow: hidden;
+      position: relative;
+      flex-grow: 1;
+      margin-right: 1rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: var(--success-color);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .probability-display {
+      min-width: 120px;
+      text-align: center;
+      background-color: var(--primary-color);
+      color: white;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 1rem;
+      font-weight: bold;
+    }
+
+    .level-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .level-step {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       position: relative;
     }
-    .bar-section.filled {
-      background-color: #4CAF50;
+
+    .level-step.active {
+      background-color: var(--success-color);
+      color: white;
     }
-    .bar-section.failed {
-      background-color: #f44336;
-      transition: background-color 0.1s;
-    }
-    .bar-section::after {
-      content: attr(data-level);
+
+    .level-step::after {
+      content: '';
       position: absolute;
-      bottom: -25px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.8em;
-      color: #666;
+      top: 50%;
+      left: 100%;
+      width: calc(100% - 30px);
+      height: 3px;
+      background-color: #e0e0e0;
+      z-index: -1;
     }
-    #tryButton {
-      padding: 12px 30px;
-      font-size: 1.1em;
-      background-color: #2196F3;
+
+    .level-step:last-child::after {
+      display: none;
+    }
+
+    .level-step.active::after {
+      background-color: var(--success-color);
+    }
+
+    .action-area {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .attempt-btn {
+      background-color: var(--primary-color);
       color: white;
       border: none;
+      padding: 0.8rem 2rem;
+      font-size: 1.1rem;
       border-radius: 5px;
       cursor: pointer;
       transition: all 0.2s;
     }
-    #tryButton:hover {
-      background-color: #0b7dda;
+
+    .attempt-btn:hover {
+      background-color: #34495e;
+      transform: translateY(-2px);
     }
-    #tryButton:disabled {
-      background-color: #cccccc;
+
+    .attempt-btn:disabled {
+      background-color: #95a5a6;
       cursor: not-allowed;
+      transform: none;
     }
-    #probabilityDisplay {
-      margin: 15px 0;
-      font-size: 1.1em;
+
+    .status-message {
+      margin: 1rem 0;
+      min-height: 1.5em;
+      font-weight: bold;
+      text-align: center;
     }
-    #lastWin {
-      margin-top: 20px;
-      color: #555;
+
+    .winner-info {
+      text-align: center;
+      margin-top: 1rem;
+      font-style: italic;
     }
-    .modal {
-      display: none;
+
+    /* Modal styles */
+    .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.7);
-      z-index: 1000;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
     }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
     .modal-content {
-      background: white;
-      padding: 25px;
-      border-radius: 8px;
+      background-color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      max-width: 400px;
       width: 90%;
-      max-width: 350px;
+      text-align: center;
     }
-    .modal h2 {
-      color: #2E7D32;
+
+    .modal-title {
+      color: var(--success-color);
       margin-top: 0;
     }
-    .modal input {
+
+    .modal-input {
       width: 100%;
-      padding: 10px;
-      margin: 15px 0;
-      box-sizing: border-box;
+      padding: 0.8rem;
+      margin: 1rem 0;
       border: 1px solid #ddd;
-      border-radius: 4px;
+      border-radius: 5px;
+      font-size: 1rem;
     }
-    .modal button {
-      padding: 10px 20px;
-      background-color: #4CAF50;
-      color: white;
+
+    .modal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .modal-btn {
+      padding: 0.6rem 1.2rem;
       border: none;
-      border-radius: 4px;
+      border-radius: 5px;
       cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .modal-btn-primary {
+      background-color: var(--success-color);
+      color: white;
+    }
+
+    /* Animation classes */
+    .shake {
+      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translateX(-1px); }
+      20%, 80% { transform: translateX(2px); }
+      30%, 50%, 70% { transform: translateX(-4px); }
+      40%, 60% { transform: translateX(4px); }
+    }
+
+    .celebrate {
+      animation: celebrate 0.5s ease;
+    }
+
+    @keyframes celebrate {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
     }
   </style>
 </head>
 <body>
-  <div id="game-container">
-    <h1>Probability Gambling</h1>
-    <div id="statusText">Click the button to start!</div>
-    <div id="probabilityDisplay">Current chance: 90%</div>
+  <div class="container">
+    <header>
+      <h1>Probability Challenge</h1>
+      <p>Test your luck through progressively difficult levels</p>
+    </header>
 
-    <div class="bar-container" id="levelBar">
-      <!-- Levels will be generated by JavaScript -->
+    <div class="game-area">
+      <div class="progress-display">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="probability-display" id="probabilityDisplay">90%</div>
+      </div>
+
+      <div class="level-indicator" id="levelIndicator"></div>
+
+      <div class="status-message" id="statusMessage">Click the button to start your challenge</div>
+
+      <div class="action-area">
+        <button class="attempt-btn" id="attemptBtn">Attempt Level</button>
+      </div>
     </div>
 
-    <button id="tryButton">Try Your Luck</button>
-    <div id="lastWin">Loading last winner...</div>
+    <div class="winner-info" id="winnerInfo">Loading last winner...</div>
   </div>
 
   <!-- Winner Modal -->
-  <div id="nameModal" class="modal">
+  <div class="modal-overlay" id="winnerModal">
     <div class="modal-content">
-      <h2>Congratulations!</h2>
-      <p>You beat all levels! Enter your name:</p>
-      <input type="text" id="playerName" placeholder="Your name" maxlength="30">
-      <button id="submitName">Submit</button>
+      <h2 class="modal-title">Challenge Complete!</h2>
+      <p>You've beaten all levels against the odds!</p>
+      <p>Enter your name to be recorded in the hall of winners:</p>
+      <input type="text" class="modal-input" id="winnerNameInput" placeholder="Your name" maxlength="30">
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-primary" id="submitWinnerBtn">Submit</button>
+      </div>
     </div>
   </div>
 
-  <!-- Audio Elements -->
+  <!-- Audio elements -->
   <audio id="winSound" src="trompeta.mp3" preload="auto"></audio>
   <audio id="failSound1" src="offMinecraft.mp3" preload="auto"></audio>
   <audio id="failSound2" src="oofRoblox.mp3" preload="auto"></audio>
@@ -158,235 +308,329 @@
   <script src="config.js"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
       // Game state
-      let currentLevel = 0
-      let lastWinDate = null
-      let lastWinnerName = "Unknown"
-      let updateInterval = null
-
-      // DOM elements
-      const levelBar = document.getElementById('levelBar')
-      const tryButton = document.getElementById('tryButton')
-      const statusText = document.getElementById('statusText')
-      const probabilityDisplay = document.getElementById('probabilityDisplay')
-      const lastWinText = document.getElementById('lastWin')
-      const nameModal = document.getElementById('nameModal')
-      const playerNameInput = document.getElementById('playerName')
-      const submitNameBtn = document.getElementById('submitName')
-      const body = document.body
-
-      // Audio elements
-      const winSound = document.getElementById('winSound')
-      const failSounds = [
-        document.getElementById('failSound1'),
-        document.getElementById('failSound2'),
-        document.getElementById('failSound3'),
-        document.getElementById('failSound4')
-      ]
-
-      // Initialize Firebase
-      try {
-        firebase.initializeApp(firebaseConfig)
-        console.log("Firebase initialized successfully")
-      } catch (error) {
-        console.error("Firebase initialization error:", error)
-        statusText.textContent = "Error initializing Firebase"
-        return
+      const gameState = {
+        currentLevel: 0,
+        currentProbability: 0.9,
+        lastWinner: null,
+        sessionId: generateSessionId(),
+        attemptCount: 0
       }
 
-      const db = firebase.firestore()
-      const functions = firebase.functions()
+      // DOM elements
+      const elements = {
+        progressFill: document.getElementById('progressFill'),
+        probabilityDisplay: document.getElementById('probabilityDisplay'),
+        levelIndicator: document.getElementById('levelIndicator'),
+        statusMessage: document.getElementById('statusMessage'),
+        attemptBtn: document.getElementById('attemptBtn'),
+        winnerInfo: document.getElementById('winnerInfo'),
+        winnerModal: document.getElementById('winnerModal'),
+        winnerNameInput: document.getElementById('winnerNameInput'),
+        submitWinnerBtn: document.getElementById('submitWinnerBtn'),
+        winSound: document.getElementById('winSound'),
+        failSounds: [
+          document.getElementById('failSound1'),
+          document.getElementById('failSound2'),
+          document.getElementById('failSound3'),
+          document.getElementById('failSound4')
+        ]
+      }
 
-      // Initialize game bars
-      function initLevelBars() {
-        levelBar.innerHTML = ''
+      // Initialize Firebase
+      let firebaseInitialized = false
+      try {
+        firebase.initializeApp(firebaseConfig)
+        firebaseInitialized = true
+        console.log('Firebase initialized successfully')
+      } catch (error) {
+        console.error('Firebase initialization failed:', error)
+        elements.statusMessage.textContent = 'System error - game functionality limited'
+        elements.attemptBtn.disabled = true
+      }
+
+      const db = firebaseInitialized ? firebase.firestore() : null
+      const fbFunctions = firebaseInitialized ? firebase.functions() : null
+
+      // Initialize game UI
+      function initGameUI() {
+        // Create level indicators
+        elements.levelIndicator.innerHTML = ''
         for (let i = 0; i <= 8; i++) {
-          const bar = document.createElement('div')
-          bar.className = 'bar-section'
-          bar.dataset.level = i + 1
-          levelBar.appendChild(bar)
+          const levelStep = document.createElement('div')
+          levelStep.className = 'level-step'
+          levelStep.textContent = i + 1
+          levelStep.id = `level-${i}`
+          elements.levelIndicator.appendChild(levelStep)
+        }
+
+        updateUI()
+        loadLastWinner()
+      }
+
+      // Update UI based on game state
+      function updateUI() {
+        // Update progress bar
+        elements.progressFill.style.width = `${gameState.currentProbability * 100}%`
+        elements.probabilityDisplay.textContent = `${Math.round(gameState.currentProbability * 100)}%`
+
+        // Update level indicators
+        document.querySelectorAll('.level-step').forEach((step, index) => {
+          if (index < gameState.currentLevel) {
+            step.classList.add('active')
+          } else {
+            step.classList.remove('active')
+          }
+        })
+      }
+
+      // Generate a unique session ID
+      function generateSessionId() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0
+          const v = c === 'x' ? r : (r & 0x3 | 0x8)
+          return v.toString(16)
+        })
+      }
+
+      // Generate a client seed for probability calculation
+      function generateClientSeed() {
+        return `${gameState.sessionId}-${gameState.attemptCount}-${Date.now()}`
+      }
+
+      // Handle level attempt
+      async function attemptLevel() {
+        gameState.attemptCount++
+        elements.attemptBtn.disabled = true
+        elements.statusMessage.textContent = 'Calculating your odds...'
+
+        // Generate verification data
+        const clientSeed = generateClientSeed()
+
+        try {
+          const attemptData = {
+            currentAttempt: {
+              level: gameState.currentLevel,
+              clientSeed
+            }
+          }
+
+          const result = await fbFunctions.httpsCallable('attemptLevel')(attemptData)
+          const { success, probability, nextLevel, isMaxLevel, serverSeed } = result.data
+
+          // Update game state
+          gameState.currentProbability = probability / 100
+          gameState.currentLevel = nextLevel
+
+          // Handle attempt result
+          if (success) {
+            if (isMaxLevel) {
+              handleLevelCompletion()
+            } else {
+              handleSuccess()
+            }
+          } else {
+            handleFailure()
+          }
+
+          updateUI()
+        } catch (error) {
+          console.error('Attempt failed:', error)
+          elements.statusMessage.textContent = 'Error processing your attempt. Please try again.'
+        } finally {
+          elements.attemptBtn.disabled = false
         }
       }
 
-      // Update visual bars based on current level
-      function updateBars() {
-        const bars = document.querySelectorAll('.bar-section')
-        bars.forEach((bar, index) => {
-          bar.classList.toggle('filled', index < currentLevel)
-        })
+      // Handle successful attempt
+      function handleSuccess() {
+        elements.statusMessage.textContent = `Success! Advanced to level ${gameState.currentLevel + 1}`
+        elements.statusMessage.style.color = 'var(--success-color)'
+        document.getElementById(`level-${gameState.currentLevel - 1}`).classList.add('celebrate')
+      }
+
+      // Handle failed attempt
+      function handleFailure() {
+        elements.statusMessage.textContent = 'Attempt failed! Resetting to level 1.'
+        elements.statusMessage.style.color = 'var(--danger-color)'
+        elements.levelIndicator.classList.add('shake')
+
+        // Play random fail sound
+        const randomSound = elements.failSounds[Math.floor(Math.random() * elements.failSounds.length)]
+        randomSound.currentTime = 0
+        randomSound.play()
+
+        // Remove shake class after animation
+        setTimeout(() => {
+          elements.levelIndicator.classList.remove('shake')
+        }, 500)
+      }
+
+      // Handle level completion (reached max level)
+      function handleLevelCompletion() {
+        elements.winSound.currentTime = 0
+        elements.winSound.play()
+        elements.statusMessage.textContent = 'Incredible! You beat all levels!'
+        showWinnerModal()
       }
 
       // Show winner modal
       function showWinnerModal() {
-        nameModal.style.display = 'flex'
-        playerNameInput.focus()
+        elements.winnerModal.classList.add('active')
+        elements.winnerNameInput.focus()
       }
 
       // Hide winner modal
       function hideWinnerModal() {
-        nameModal.style.display = 'none'
+        elements.winnerModal.classList.remove('active')
       }
 
-      // Submit winner name to server
+      // Submit winner name
       async function submitWinner() {
-        const name = playerNameInput.value.trim()
-        if (!name) {
-          alert("Please enter your name")
+        const playerName = elements.winnerNameInput.value.trim()
+
+        if (playerName.length < 2) {
+          alert('Please enter a valid name (at least 2 characters)')
           return
         }
+
+        elements.submitWinnerBtn.disabled = true
+        elements.submitWinnerBtn.textContent = 'Submitting...'
 
         try {
-          submitNameBtn.disabled = true
-          submitNameBtn.textContent = "Saving..."
+          const result = await fbFunctions.httpsCallable('recordWinner')({
+            playerName,
+            finalLevel: gameState.currentLevel
+          })
 
-          await functions.httpsCallable("updateLastWin")({ playerName: name })
-
-          hideWinnerModal()
-          loadLastWin()
-          resetGame()
+          if (result.data.status === 'SUCCESS') {
+            hideWinnerModal()
+            resetGame()
+            loadLastWinner()
+          } else {
+            throw new Error('Failed to record winner')
+          }
         } catch (error) {
-          console.error("Error saving winner:", error)
-          alert("Failed to save. Please try again.")
+          console.error('Error submitting winner:', error)
+          alert('Failed to submit your name. Please try again.')
         } finally {
-          submitNameBtn.disabled = false
-          submitNameBtn.textContent = "Submit"
+          elements.submitWinnerBtn.disabled = false
+          elements.submitWinnerBtn.textContent = 'Submit'
         }
       }
 
-      // Reset game after win
+      // Reset game after completion
       function resetGame() {
-        currentLevel = 0
-        updateBars()
-        tryButton.disabled = false
-        statusText.textContent = "Click the button to start again!"
-        probabilityDisplay.textContent = "Current chance: 90%"
+        gameState.currentLevel = 0
+        gameState.currentProbability = 0.9
+        gameState.attemptCount = 0
+        updateUI()
+        elements.statusMessage.textContent = 'Click the button to start a new challenge'
+        elements.statusMessage.style.color = ''
       }
 
-      // Format relative time (same as before)
-      function formatRelativeTime(date) {
-        const now = new Date()
-        const seconds = Math.floor((now - date) / 1000)
-
-        if (seconds < 60) return { text: `${seconds} second${seconds !== 1 ? 's' : ''} ago`, interval: 1000 }
-        const minutes = Math.floor(seconds / 60)
-        if (minutes < 60) return { text: `${minutes} minute${minutes !== 1 ? 's' : ''} ago`, interval: 60000 }
-        const hours = Math.floor(minutes / 60)
-        if (hours < 24) return { text: `${hours} hour${hours !== 1 ? 's' : ''} ago`, interval: 3600000 }
-        const days = Math.floor(hours / 24)
-        if (days < 30) return { text: `${days} day${days !== 1 ? 's' : ''} ago`, interval: 86400000 }
-        const months = Math.floor(days / 30)
-        if (months < 12) return { text: `${months} month${months !== 1 ? 's' : ''} ago`, interval: 2592000000 }
-        const years = Math.floor(months / 12)
-        return { text: `${years} year${years !== 1 ? 's' : ''} ago`, interval: 31536000000 }
-      }
-
-      // Update last win display
-      function updateLastWinDisplay() {
-        if (!lastWinDate) {
-          lastWinText.textContent = "No winners yet"
+      // Load last winner from Firestore
+      function loadLastWinner() {
+        if (!db) {
+          elements.winnerInfo.textContent = 'Database not available'
           return
         }
 
-        const { text, interval } = formatRelativeTime(lastWinDate)
-        lastWinText.textContent = `Last winner: ${lastWinnerName} (${text})`
-
-        if (updateInterval) clearInterval(updateInterval)
-        updateInterval = setInterval(updateLastWinDisplay, interval)
-      }
-
-      // Load last win from Firestore
-      function loadLastWin() {
-        db.collection('levelCompletion').doc('lastCompletion').get()
+        db.collection('winners').doc('latest').get()
           .then(doc => {
-            if (doc.exists && doc.data().timestamp) {
-              lastWinDate = doc.data().timestamp.toDate()
-              lastWinnerName = doc.data().name || "Anonymous"
-              updateLastWinDisplay()
+            if (doc.exists) {
+              const data = doc.data()
+              const timestamp = data.timestamp.toDate()
+              gameState.lastWinner = {
+                name: data.name,
+                timestamp
+              }
+              updateLastWinnerDisplay()
             } else {
-              lastWinText.textContent = "No winners yet"
+              elements.winnerInfo.textContent = 'No winners yet - be the first!'
             }
           })
           .catch(error => {
-            console.error("Error loading last win:", error)
-            lastWinText.textContent = "Error loading last winner"
+            console.error('Error loading last winner:', error)
+            elements.winnerInfo.textContent = 'Error loading winner information'
           })
       }
 
-      // Handle try button click
-      async function handleTry() {
-        try {
-          tryButton.disabled = true
-          statusText.textContent = "Calculating..."
+      // Update last winner display with relative time
+      function updateLastWinnerDisplay() {
+        if (!gameState.lastWinner) return
 
-          // Generate client seed for verification
-          const clientSeed = Math.random().toString(36).substring(2, 15)
+        const { name, timestamp } = gameState.lastWinner
+        const relativeTime = getRelativeTime(timestamp)
+        elements.winnerInfo.textContent = `Last winner: ${name} (${relativeTime.text})`
 
-          const result = await functions.httpsCallable("tryLevel")({
-            currentLevel,
-            clientSeed
-          })
+        // Update the display when the time unit changes
+        if (relativeTime.interval) {
+          setTimeout(updateLastWinnerDisplay, relativeTime.interval)
+        }
+      }
 
-          const { success, newLevel, status, currentChance, nextChance, serverSeed } = result.data
+      // Convert date to relative time string
+      function getRelativeTime(date) {
+        const now = new Date()
+        const seconds = Math.floor((now - date) / 1000)
 
-          // Update game state
-          currentLevel = newLevel
-          statusText.textContent = status
-          probabilityDisplay.textContent = `Current chance: ${currentChance}%`
-
-          if (success) {
-            updateBars()
-
-            if (currentLevel > 8) { // Player won
-              body.style.backgroundColor = "#4CAF50"
-              winSound.currentTime = 0
-              winSound.play()
-              showWinnerModal()
-              setTimeout(() => {
-                body.style.backgroundColor = ""
-              }, 2000)
-            }
-          } else {
-            // Flash red on failure
-            const bars = document.querySelectorAll('.bar-section')
-            bars.forEach((bar, index) => {
-              if (index < currentLevel) bar.classList.add('failed')
-            })
-
-            // Play random fail sound
-            const randomSound = failSounds[Math.floor(Math.random() * failSounds.length)]
-            randomSound.currentTime = 0
-            randomSound.play()
-
-            // Reset after delay
-            setTimeout(() => {
-              bars.forEach(bar => bar.classList.remove('failed'))
-              currentLevel = 0
-              updateBars()
-              probabilityDisplay.textContent = "Current chance: 90%"
-            }, 500)
+        if (seconds < 60) {
+          return {
+            text: `${seconds} second${seconds !== 1 ? 's' : ''} ago`,
+            interval: 1000
           }
+        }
 
-          console.log("Server seed for verification:", serverSeed)
-        } catch (error) {
-          console.error("Error in tryLevel:", error)
-          statusText.textContent = "Error processing your attempt"
-        } finally {
-          tryButton.disabled = false
+        const minutes = Math.floor(seconds / 60)
+        if (minutes < 60) {
+          return {
+            text: `${minutes} minute${minutes !== 1 ? 's' : ''} ago`,
+            interval: 60000
+          }
+        }
+
+        const hours = Math.floor(minutes / 60)
+        if (hours < 24) {
+          return {
+            text: `${hours} hour${hours !== 1 ? 's' : ''} ago`,
+            interval: 3600000
+          }
+        }
+
+        const days = Math.floor(hours / 24)
+        if (days < 30) {
+          return {
+            text: `${days} day${days !== 1 ? 's' : ''} ago`,
+            interval: 86400000
+          }
+        }
+
+        const months = Math.floor(days / 30)
+        if (months < 12) {
+          return {
+            text: `${months} month${months !== 1 ? 's' : ''} ago`,
+            interval: 2592000000
+          }
+        }
+
+        const years = Math.floor(months / 12)
+        return {
+          text: `${years} year${years !== 1 ? 's' : ''} ago`,
+          interval: 31536000000
         }
       }
 
       // Event listeners
-      tryButton.addEventListener('click', handleTry)
-      submitNameBtn.addEventListener('click', submitWinner)
-      playerNameInput.addEventListener('keypress', e => {
+      elements.attemptBtn.addEventListener('click', attemptLevel)
+      elements.submitWinnerBtn.addEventListener('click', submitWinner)
+      elements.winnerNameInput.addEventListener('keypress', e => {
         if (e.key === 'Enter') submitWinner()
       })
 
-      // Initialize game
-      initLevelBars()
-      updateBars()
-      loadLastWin()
+      // Initialize the game
+      initGameUI()
     })
   </script>
 </body>
