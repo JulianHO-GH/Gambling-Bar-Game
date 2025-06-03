@@ -394,55 +394,60 @@
         })
       }
 
-      // Generate a client seed for probability calculation
-      function generateClientSeed() {
-        return `${gameState.sessionId}-${gameState.attemptCount}-${Date.now()}`
-      }
+     // Función auxiliar para generar el clientSeed
+function generateClientSeed() {
+  return window.crypto.getRandomValues(new Uint32Array(1))[0].toString(36) +
+         Date.now().toString(36)
+}
 
       // Handle level attempt
       async function attemptLevel() {
-        gameState.attemptCount++
-        elements.attemptBtn.disabled = true
-        elements.statusMessage.textContent = 'Calculating your odds...'
+  gameState.attemptCount++;
+  elements.attemptBtn.disabled = true;
+  elements.statusMessage.textContent = 'Calculating your odds...';
 
-        // Generate verification data
-        const clientSeed = generateClientSeed()
-
-        try {
-          const attemptData = {
-            currentAttempt: {
-              level: gameState.currentLevel,
-              clientSeed
-            }
-          }
-
-          const result = await fbFunctions.httpsCallable('attemptLevel')(attemptData)
-          const { success, probability, nextLevel, isMaxLevel, serverSeed } = result.data
-
-          // Update game state
-          gameState.currentProbability = probability / 100
-          gameState.currentLevel = nextLevel
-
-          // Handle attempt result
-          if (success) {
-            if (isMaxLevel) {
-              handleLevelCompletion()
-            } else {
-              handleSuccess()
-            }
-          } else {
-            handleFailure()
-          }
-
-          updateUI()
-        } catch (error) {
-          console.error('Attempt failed:', error)
-          elements.statusMessage.textContent = 'Error processing your attempt. Please try again.'
-        } finally {
-          elements.attemptBtn.disabled = false
-        }
+  try {
+    // Prepara datos con validación explícita
+    const attemptData = {
+      currentAttempt: {
+        level: Number(gameState.currentLevel),
+        clientSeed: generateClientSeed()
       }
+    };
 
+    // Verifica los datos antes de enviar
+    if (isNaN(attemptData.currentAttempt.level)) {
+      throw new Error('Invalid level value');
+    }
+
+    console.log('Sending attempt data (validated):', {
+      level: attemptData.currentAttempt.level,
+      levelType: typeof attemptData.currentAttempt.level,
+      clientSeedLength: attemptData.currentAttempt.clientSeed.length
+    });
+
+    const result = await fbFunctions.httpsCallable('attemptLevel')(attemptData);
+
+    console.log('Received valid response:', result.data);
+
+    // Procesar respuesta exitosa...
+
+  } catch (error) {
+    console.error('Full error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      stack: error.stack
+    });
+
+    elements.statusMessage.textContent = `Error: ${error.message}`;
+    elements.statusMessage.style.color = 'var(--danger-color)';
+
+  } finally {
+    elements.attemptBtn.disabled = false;
+  }
+}
       // Handle successful attempt
       function handleSuccess() {
         elements.statusMessage.textContent = `Success! Advanced to level ${gameState.currentLevel + 1}`
@@ -531,30 +536,61 @@
       }
 
       // Load last winner from Firestore
-      function loadLastWinner() {
+      async function loadLastWinner() {
         if (!db) {
           elements.winnerInfo.textContent = 'Database not available'
           return
         }
 
-        db.collection('winners').doc('latest').get()
-          .then(doc => {
-            if (doc.exists) {
-              const data = doc.data()
-              const timestamp = data.timestamp.toDate()
-              gameState.lastWinner = {
-                name: data.name,
-                timestamp
-              }
-              updateLastWinnerDisplay()
-            } else {
-              elements.winnerInfo.textContent = 'No winners yet - be the first!'
-            }
+        // Primero intenta con la nueva ubicación
+        try {
+          const newDoc = await db.collection('winners').doc('latest').get()
+          if (newDoc.exists) {
+            updateWinnerInfo(newDoc)
+            return
+          }
+        } catch (error) {
+          console.log('No se encontró winner en nueva ubicación, intentando antigua...')
+        }
+
+        // Si falla, intenta con la ubicación antigua
+        try {
+          const oldDoc = await db.collection('levelCompletion').doc('lastCompletion').get()
+          if (oldDoc.exists) {
+            // Migrar automáticamente a la nueva estructura
+            await migrateOldWinner(oldDoc)
+            updateWinnerInfo(oldDoc)
+          } else {
+            elements.winnerInfo.textContent = 'No winners yet - be the first!'
+          }
+        } catch (error) {
+          console.error('Error loading last winner:', error)
+          elements.winnerInfo.textContent = 'Error loading winner information'
+        }
+      }
+
+      function updateWinnerInfo(doc) {
+        const data = doc.data()
+        const timestamp = data.timestamp.toDate()
+        gameState.lastWinner = {
+          name: data.name,
+          timestamp
+        }
+        updateLastWinnerDisplay()
+      }
+
+      async function migrateOldWinner(oldDoc) {
+        try {
+          const data = oldDoc.data()
+          await db.collection('winners').doc('latest').set({
+            name: data.name,
+            timestamp: data.timestamp,
+            migrated: true
           })
-          .catch(error => {
-            console.error('Error loading last winner:', error)
-            elements.winnerInfo.textContent = 'Error loading winner information'
-          })
+          console.log('Migrado winner antiguo a nueva estructura')
+        } catch (migError) {
+          console.error('Error migrando datos antiguos:', migError)
+        }
       }
 
       // Update last winner display with relative time

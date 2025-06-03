@@ -9,7 +9,7 @@ module.exports = {
     sourceType: 'module'
   },
   rules: {
-    'max-len': ['error', {code: 125}],
+    'max-len': ['error', {code: 150}],
     'object-curly-spacing': ['error', 'never'],
     'eol-last': ['error', 'always'],
     'no-unused-vars': ['warn'],
