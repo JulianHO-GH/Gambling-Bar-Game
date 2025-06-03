@@ -407,7 +407,7 @@ function generateClientSeed() {
   elements.statusMessage.textContent = 'Calculating your odds...';
 
   try {
-    // Prepara datos con validación explícita
+    // ENVÍA DIRECTAMENTE EL OBJETO currentAttempt SIN EL WRAPPER 'data'
     const attemptData = {
       currentAttempt: {
         level: Number(gameState.currentLevel),
@@ -415,35 +415,39 @@ function generateClientSeed() {
       }
     };
 
-    // Verifica los datos antes de enviar
-    if (isNaN(attemptData.currentAttempt.level)) {
-      throw new Error('Invalid level value');
-    }
+    console.log('Sending attempt data:', JSON.stringify(attemptData, null, 2));
 
-    console.log('Sending attempt data (validated):', {
-      level: attemptData.currentAttempt.level,
-      levelType: typeof attemptData.currentAttempt.level,
-      clientSeedLength: attemptData.currentAttempt.clientSeed.length
-    });
-
+    // Llama a la función sin wrapper adicional
     const result = await fbFunctions.httpsCallable('attemptLevel')(attemptData);
 
-    console.log('Received valid response:', result.data);
+    console.log('Received response:', result.data);
 
-    // Procesar respuesta exitosa...
+    // Procesa la respuesta exitosa
+    const { success, probability, nextLevel, isMaxLevel } = result.data;
+
+    gameState.currentProbability = probability / 100;
+    gameState.currentLevel = nextLevel;
+
+    if (success) {
+      if (isMaxLevel) {
+        handleLevelCompletion();
+      } else {
+        handleSuccess();
+      }
+    } else {
+      handleFailure();
+    }
+
+    updateUI();
 
   } catch (error) {
-    console.error('Full error details:', {
-      name: error.name,
+    console.error('Error details:', {
       message: error.message,
       code: error.code,
-      details: error.details,
-      stack: error.stack
+      details: error.details
     });
 
     elements.statusMessage.textContent = `Error: ${error.message}`;
-    elements.statusMessage.style.color = 'var(--danger-color)';
-
   } finally {
     elements.attemptBtn.disabled = false;
   }

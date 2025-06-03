@@ -22,95 +22,57 @@ const GAME_CONFIG = {
   probabilityStep: 0.1 // Decreases by 10% each level
 }
 
-exports.attemptLevel = functions.https.onCall(async (data, context) => {
-  // Log completo del request recibido
-  functions.logger.log('Request received RAW:', {
-    rawData: data,
-    rawDataType: typeof data,
-    auth: !!context.auth
-  })
+exports.attemptLevel = functions.https.onCall((data, context) => {
+  // Firebase YA extrajo el contenido de data.data para nosotros
+  // data ya ES el currentAttempt directamente
 
-  // Validación más flexible y detallada
-  try {
-    // Verifica si data existe y es un objeto
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Request data must be an object',
-        {receivedType: typeof data}
-      )
-    }
+  // Validación mejorada
+  if (!data || typeof data !== 'object') {
+    functions.logger.error('Invalid request format', {received: typeof data})
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid request format')
+  }
 
-    // Verifica currentAttempt de forma más permisiva
-    if (!data.currentAttempt || typeof data.currentAttempt !== 'object') {
-      functions.logger.error('Invalid currentAttempt:', {
-        hasCurrentAttempt: !!data.currentAttempt,
-        currentAttemptType: typeof data.currentAttempt
-      })
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Request must contain currentAttempt object',
-        {received: data}
-      )
-    }
-
-    // Extrae valores con defaults seguros
-    const attempt = data.currentAttempt
-    const level = typeof attempt.level === 'number' ? attempt.level : !isNaN(Number(attempt.level)) ? Number(attempt.level) : NaN
-    const clientSeed = String(attempt.clientSeed || '')
-
-    // Validación de valores
-    if (isNaN(level) || level < 0 || level > 8) {
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Level must be a number between 0 and 8',
-        {receivedLevel: attempt.level, convertedLevel: level}
-      )
-    }
-
-    if (clientSeed.length < 8) {
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'clientSeed must be at least 8 characters',
-        {receivedLength: clientSeed.length}
-      )
-    }
-
-    // Lógica del juego
-    const currentProbability = 0.9 - (level * 0.1)
-    const success = Math.random() < currentProbability
-
-    functions.logger.log('Attempt processed successfully', {
-      level,
-      currentProbability,
-      success,
-      nextLevel: success ? Math.min(level + 1, 8) : 0
+  // Extrae valores con conversión explícita
+  const level = parseInt(data.level, 10)
+  const clientSeed = String(data.clientSeed || '')
+  // Validación de nivel
+  /*if (isNaN(level)) {
+    functions.logger.error('Invalid level type', {
+      received: data.level,
+      type: typeof data.level
     })
-
-    return {
-      success,
-      probability: Math.round(currentProbability * 100),
-      nextLevel: success ? Math.min(level + 1, 8) : 0,
-      isMaxLevel: success && level >= 7
-    }
-  } catch (error) {
-    functions.logger.error('Error processing attempt:', {
-      error: error.message,
-      stack: error.stack,
-      details: error.details
-    })
-
-    // Reenviar errores conocidos
-    if (error instanceof functions.https.HttpsError) {
-      throw error
-    }
-
-    // Para errores desconocidos
     throw new functions.https.HttpsError(
-      'internal',
-      'An unexpected error occurred',
-      {originalError: error.message}
+      'invalid-argument',
+      'Level must be a number',
+      {received: data.level}
     )
+  }
+*/
+  if (level < 0 || level > 8) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Level must be between 0 and 8',
+      {received: level}
+    )
+  }
+  // Validación de clientSeed
+  /*if (clientSeed.length < 8) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'clientSeed must be at least 8 characters',
+      {length: clientSeed.length}
+    )
+  }*/
+  // Lógica del juego
+  const probability = 0.9 - (level * 0.1)
+  const success = Math.random() < probability
+
+  // Respuesta
+  return {
+    success,
+    probability: Math.round(probability * 100),
+    nextLevel: success ? Math.min(level + 1, 8) : 0,
+    isMaxLevel: success && level >= 7
   }
 })
 
